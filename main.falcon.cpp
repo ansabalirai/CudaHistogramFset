@@ -107,9 +107,9 @@ std::vector<int> createHistogram (std::vector<int> spectrum, float range, int bi
 	return Histogram;
 }
 
-void fset(int* inputData, int* inputHistogram, int* spectraSizes, int totalHistogramElements, int totalElements, int totalSpectra, int fsetSize, 
-			int blocks, int threads, int* outputScores);
 
+void fset(int* inputData, int* inputHistogram, int* spectraSizes, int totalHistogramElements, int totalElements, int totalSpectra, int fsetSize, 
+			int blocks, int threads, int* membershipArray);
 
 void printDeviceArray(int* input, int size);
 
