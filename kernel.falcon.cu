@@ -295,6 +295,8 @@ static inline void loadbar(unsigned int x, unsigned int n, unsigned int w = 50)
 // Main host function to compute fset scores
 void fset(int* inputData, int* inputHistogram, int* spectraSizes, int totalHistogramElements, int totalElements, int totalSpectra, int fsetSize, 
 			int blocks, int threads, int* outputScores)
+void fset(int* inputData, int* inputHistogram, int* spectraSizes, int totalHistogramElements, int totalElements, int totalSpectra, int fsetSize, 
+			int blocks, int threads, int* membershipArray)
 {
 	
 		// Caluclate partial sum of spectra Sizes
@@ -312,6 +314,7 @@ void fset(int* inputData, int* inputHistogram, int* spectraSizes, int totalHisto
 	int *d_spectraSizeArray;
 	int *d_spectraScanArray;
 	int *d_numberOfBins;
+	int *d_membershipArray;
 	checkCudaErrors(cudaMalloc((void**)&d_inputData, totalElements*sizeof(int)));
 	checkCudaErrors(cudaMemcpy(d_inputData, inputData, totalElements*sizeof(int), cudaMemcpyHostToDevice));
 	checkCudaErrors(cudaMalloc((void**)&d_inputHistogram, totalHistogramElements*sizeof(int)));
@@ -322,7 +325,8 @@ void fset(int* inputData, int* inputHistogram, int* spectraSizes, int totalHisto
 	checkCudaErrors(cudaMemcpy(d_spectraScanArray, spectraScanArray, totalSpectra*sizeof(int), cudaMemcpyHostToDevice));
 	checkCudaErrors(cudaMalloc((void**)&d_numberOfBins, 1*sizeof(int)));
 	checkCudaErrors(cudaMemset(d_numberOfBins, totalHistogramElements/totalSpectra, 1*sizeof(int)));
-
+	checkCudaErrors(cudaMalloc((void**)&d_membershipArray, totalSpectra*sizeof(int)));
+	checkCudaErrors(cudaMemcpy(d_membershipArray, membershipArray, totalSpectra*sizeof(int), cudaMemcpyHostToDevice));
 	
 	//printHostArray("Size array:",spectraSizes,totalSpectra);
 	//printHostArray("Scanned Size array:",spectraScanArray,totalSpectra);
@@ -343,21 +347,28 @@ void fset(int* inputData, int* inputHistogram, int* spectraSizes, int totalHisto
 		*/
 
 		//cout<< "Iteration number: " << i <<endl;
-		int *d_test_array;
-		checkCudaErrors(cudaMalloc((void**)&d_test_array, 4*sizeof(int)));
-		compareSpectra<<<blocks, threads>>>(d_inputData,d_inputHistogram,d_spectraSizeArray, d_spectraScanArray, totalSpectra,totalElements,totalHistogramElements,totalHistogramElements/totalSpectra,fsetSize,i,d_test_array);
+		//int *d_test_array;
+		//checkCudaErrors(cudaMalloc((void**)&d_test_array, 4*sizeof(int)));
+		compareSpectra<<<blocks, threads>>>(d_inputData,d_inputHistogram,d_spectraSizeArray, d_spectraScanArray, 
+						totalSpectra,totalElements,totalHistogramElements,totalHistogramElements/totalSpectra,fsetSize,i,d_membershipArray);
+		
 		cudaDeviceSynchronize(); 
 		cudaError_t  code = cudaGetLastError();
 		if (code != cudaSuccess) 
 			printf ("Cuda error -- %s\n", cudaGetErrorString(code)); 
 		
-		//loadbar(i,threads); //Takes extra time to print, so maybe not include it after all
-
+		loadbar(i,threads); //Takes extra time to print, so maybe not include it after all
+		
+		
 
 	}
 
 	timer.Stop();
 	printf("\nGPU code ran in: %f seconds\n", timer.Elapsed()/1000);
+
+	printDeviceArray("MembershipArray",d_membershipArray,totalSpectra);
+	checkCudaErrors(cudaMemcpy(membershipArray, d_membershipArray, totalSpectra*sizeof(int), cudaMemcpyDeviceToHost));
+	printf("Number of unique clusters = %d\n",numberOfClusters(membershipArray,totalSpectra));
 
 	return;
 
