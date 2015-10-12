@@ -292,11 +292,24 @@ static inline void loadbar(unsigned int x, unsigned int n, unsigned int w = 50)
 	}
 }
 
+int numberOfClusters(int* membershipArray, int sizeOfArray)
+{
+	int count = 0;
+	for (int i = 0; i < sizeOfArray; i++)
+	{
+		if (membershipArray[i] != i)
+			count+=1;
+	}
+
+	return sizeOfArray - count;
+}
+
+
+
+
 // Main host function to compute fset scores
 void fset(int* inputData, int* inputHistogram, int* spectraSizes, int totalHistogramElements, int totalElements, int totalSpectra, int fsetSize, 
 			int blocks, int threads, int* outputScores)
-void fset(int* inputData, int* inputHistogram, int* spectraSizes, int totalHistogramElements, int totalElements, int totalSpectra, int fsetSize, 
-			int blocks, int threads, int* membershipArray)
 {
 	
 		// Caluclate partial sum of spectra Sizes
