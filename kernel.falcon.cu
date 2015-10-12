@@ -309,7 +309,7 @@ int numberOfClusters(int* membershipArray, int sizeOfArray)
 
 // Main host function to compute fset scores
 void fset(int* inputData, int* inputHistogram, int* spectraSizes, int totalHistogramElements, int totalElements, int totalSpectra, int fsetSize, 
-			int blocks, int threads, int* outputScores)
+			int blocks, int threads, int* membershipArray)
 {
 	
 		// Caluclate partial sum of spectra Sizes
